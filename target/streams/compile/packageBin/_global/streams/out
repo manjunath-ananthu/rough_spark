@@ -1,0 +1,13 @@
+[0m[[0m[0mdebug[0m] [0m[0mPackaging /Users/manjunatha/workspace/rought_spark/target/scala-2.12/rought_spark_2.12-0.1.0-SNAPSHOT.jar ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	README.md[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/manjunatha/workspace/rought_spark/target/scala-2.12/classes/README.md[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/manjunatha/workspace/rought_spark/target/scala-2.12/classes/com[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com/roughspark[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/manjunatha/workspace/rought_spark/target/scala-2.12/classes/com/roughspark[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com/roughspark/SparkSimpleApp.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/manjunatha/workspace/rought_spark/target/scala-2.12/classes/com/roughspark/SparkSimpleApp.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com/roughspark/SparkSimpleApp$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/manjunatha/workspace/rought_spark/target/scala-2.12/classes/com/roughspark/SparkSimpleApp$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m
