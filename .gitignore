@@ -4,3 +4,4 @@ target/
 project/target
 .bsp/
 kafka/data
+project
