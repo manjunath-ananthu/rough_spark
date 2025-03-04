@@ -1,0 +1,128 @@
+services:
+  spark-master:
+    image: apache/spark:3.5.4-scala
+    container_name: spark-master
+    hostname: spark-master
+    networks:
+      - spark-network
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+
+  spark-worker-1:
+    image: apache/spark:3.5.4-scala
+    container_name: spark-worker-1
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+    ports:
+      - "8081:8081"
+
+  spark-worker-2:
+    image: apache/spark:3.5.4-scala
+    container_name: spark-worker-2
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+    ports:
+      - "8082:8081"
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    networks:
+      - spark-network
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://localhost:9093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LOG_DIRS: /var/logs/kafka/data
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    volumes:
+      - ./kafka/data:/var/logs/kafka/data
+
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    networks:
+      - spark-network
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+      POSTGRES_DB: metastore
+
+  hive-metastore:
+    image: apache/hive:4.0.0
+    container_name: hive-metastore
+    depends_on:
+      - postgres
+    networks:
+      - spark-network
+    ports:
+      - "9083:9083"
+    environment:
+      HIVE_METASTORE_URI: thrift://hive-metastore:9083
+      DB_DRIVER: postgres
+      SERVICE_NAME: metastore
+      DB_URI: jdbc:postgresql://postgres:5432/metastore
+      DB_USER: hive
+      DB_PASSWORD: hive
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/postgres
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=hive
+    volumes:
+      - ./postgres_jar/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.6.0.jar
+
+  hive-server:
+    image: apache/hive:4.0.0
+    container_name: hive-server
+    depends_on:
+      - hive-metastore
+    networks:
+      - spark-network
+    ports:
+      - "10000:10000"
+    environment:
+      HIVE_SERVER2_THRIFT_PORT: 10000
+      HIVE_METASTORE_URI: thrift://hive-metastore:9083
+      SERVICE_OPTS : >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/postgres
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=hive
+        -Dhive.metastore.uris=thrift://hive-metastore:9083
+    volumes:
+      - ./postgres_jar/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.6.0.jar
+
+networks:
+  spark-network:
+    driver: bridge
