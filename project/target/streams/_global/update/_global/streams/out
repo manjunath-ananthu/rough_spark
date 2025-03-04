@@ -1,5 +1,0 @@
-[0m[[0m[0mdebug[0m] [0m[0mnot up to date. inChanged = false, force = false[0m
-[0m[[0m[0mdebug[0m] [0m[0mUpdating ProjectRef(uri("file:/Users/manjunatha/workspace/rought_spark/project/"), "rought_spark-build")...[0m
-[0m[[0m[33mwarn[0m] [0m[0mUnrecognized repository Scala Plugin Bundled Repository, ignoring it[0m
-[0m[[0m[33mwarn[0m] [0m[0mUnrecognized repository Scala Plugin Bundled Repository, ignoring it[0m
-[0m[[0m[0mdebug[0m] [0m[0mDone updating ProjectRef(uri("file:/Users/manjunatha/workspace/rought_spark/project/"), "rought_spark-build")[0m

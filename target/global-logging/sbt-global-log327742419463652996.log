@@ -1,7 +1,0 @@
-[0m[[0m[0mdebug[0m] [0m[0m> Exec(compile, None, None)[0m
-[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Compile / compile[0m
-[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
-[0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to /Users/manjunatha/workspace/rought_spark/target/scala-2.13/classes ...[0m
-[0m[[0m[0minfo[0m] [0m[0mdone compiling[0m
-[0m[[0m[32msuccess[0m] [0m[0mTotal time: 2 s, completed 27-Mar-2024, 10:56:57 pm[0m
-[0m[[0m[0mdebug[0m] [0m[0m> Exec(idea-shell, None, None)[0m
