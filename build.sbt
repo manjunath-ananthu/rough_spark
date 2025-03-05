@@ -6,7 +6,7 @@ ThisBuild / organization := "com.manjunath"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "rought_spark",
+    name := "rough_spark",
     scalaVersion := "2.12.19",
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-sql" % "3.5.1",
