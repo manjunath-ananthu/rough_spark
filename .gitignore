@@ -5,3 +5,8 @@ project/target
 .bsp/
 kafka/data
 project
+jars/*
+!jars/.gitkeep
+.DS_Store
+src/.DS_Store
+src/main/.DS_Store
