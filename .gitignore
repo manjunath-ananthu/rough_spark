@@ -11,3 +11,4 @@ src/main/.DS_Store
 
 # Allow plugins.sbt in project directory
 !project/plugins.sbt
+target
