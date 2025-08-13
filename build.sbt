@@ -12,6 +12,8 @@ lazy val root = (project in file("."))
       "org.apache.spark" %% "spark-sql" % "3.5.1",
       "org.scala-lang" %% "toolkit-test" % "0.1.7" % Test,
       "org.apache.spark" %% "spark-core" % "3.5.1",
+      // Enable Hive support in Spark (matches Spark version)
+      "org.apache.spark" %% "spark-hive" % "3.5.1",
       "org.mongodb.spark" %% "mongo-spark-connector" % "10.5.0"
     ),
     // Add JVM options for Java 11+ compatibility
