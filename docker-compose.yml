@@ -48,6 +48,7 @@ services:
       - SPARK_WORKER_CORES=2
       - SPARK_WORKER_MEMORY=2g
     command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
     ports:
       - "8082:8081"
@@ -86,6 +87,21 @@ services:
       POSTGRES_PASSWORD: hive
       POSTGRES_DB: metastore
 
+  pgadmin:
+    image: dpage/pgadmin4:8.9
+    container_name: pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - spark-network
+    environment:
+      PGADMIN_DEFAULT_EMAIL: manjunath2334@yopmail.com
+      PGADMIN_DEFAULT_PASSWORD: SuperSecret
+    ports:
+      - "5050:80"
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+
   hive-metastore:
     image: apache/hive:4.0.0
     container_name: hive-metastore
@@ -108,7 +124,7 @@ services:
         -Djavax.jdo.option.ConnectionUserName=hive
         -Djavax.jdo.option.ConnectionPassword=hive
     volumes:
-      - ./postgres_jar/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.6.0.jar
+      - ./postgres_jar/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.7.5.jar
 
   hive-server:
     image: apache/hive:4.0.0
