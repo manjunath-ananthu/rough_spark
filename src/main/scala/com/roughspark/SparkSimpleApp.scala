@@ -18,7 +18,7 @@ object SparkSimpleApp {
     val spark = SparkSession.builder()
       .config(conf)
       .config("hive.metastore.uris", "thrift://hive-metastore:9083")
-      .config("spark.sql.warehouse.dir", "/user/hive/warehouse")
+      .config("spark.sql.warehouse.dir", "/opt/hive/data/warehouse")
       .enableHiveSupport()
       .getOrCreate()
 

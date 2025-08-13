@@ -8,7 +8,7 @@
   </property>
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>/user/hive/warehouse</value>
+    <value>/opt/hive/data/warehouse</value>
   </property>
   <property>
     <name>hive.metastore.schema.verification</name>
