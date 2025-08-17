@@ -14,3 +14,4 @@ src/main/.DS_Store
 target
 pgadmin
 hive_warehouse
+spark-logs

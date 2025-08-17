@@ -14,7 +14,7 @@ services:
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     volumes:
       - ./jars/:/opt/spark/custom/jars
-      - ./spark-logs:/opt/spark/logs
+      - ./spark-logs/master:/opt/spark/work
       - ./files:/opt/spark/files
       - ./hive_warehouse:/opt/hive/data/warehouse
 
@@ -36,7 +36,7 @@ services:
       - "8081:8081"
     volumes:
       - ./jars/:/opt/spark/custom/jars
-      - ./spark-logs/worker1:/opt/spark/logs
+      - ./spark-logs/worker1:/opt/spark/work
       - ./hive_warehouse:/opt/hive/data/warehouse
 
   spark-worker-2:
@@ -56,7 +56,7 @@ services:
     ports:
       - "8082:8081"
     volumes:
-      - ./spark-logs/worker2:/opt/spark/logs
+      - ./spark-logs/worker2:/opt/spark/work
       - ./jars/:/opt/spark/custom/jars
       - ./hive_warehouse:/opt/hive/data/warehouse
 
