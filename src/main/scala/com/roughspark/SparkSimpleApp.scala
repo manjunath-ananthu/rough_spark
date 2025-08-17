@@ -3,8 +3,6 @@ package com.roughspark
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions._
-import com.mongodb.spark.connector._
-import com.mongodb.spark.sql._
 
 object SparkSimpleApp {
   def main(args: Array[String]): Unit = {
@@ -18,7 +16,7 @@ object SparkSimpleApp {
     val spark = SparkSession.builder()
       .config(conf)
       .config("hive.metastore.uris", "thrift://hive-metastore:9083")
-      .config("spark.sql.warehouse.dir", "/user/hive/warehouse")
+      .config("spark.sql.warehouse.dir", "/opt/hive/data/warehouse")
       .enableHiveSupport()
       .getOrCreate()
 
@@ -31,7 +29,7 @@ object SparkSimpleApp {
           """
         [
           { "$match": { "company_id": "542ab2e523df4255a24e71a719f3da85" } },
-          { "$limit": 10 }
+          { "$limit": 100 }
         ]
         """
         )
@@ -40,29 +38,26 @@ object SparkSimpleApp {
       transformedDF.show()
       spark.sql("CREATE DATABASE IF NOT EXISTS rough_db")
       spark.catalog.setCurrentDatabase("rough_db")
-
-      // Show some data
-      println()
-      println()
-      println()
-      println()
-      println(s"Total records: ${mongoDF.count()}")
-      println()
-      println()
-      println()
-      println()
-
       // Write to Hive as a managed table (overwrite for idempotency in dev)
       transformedDF
         .limit(200)
         .write
-        .mode("overwrite")
-        .format("hive")
+        .mode("append")
+        .format("parquet")
         .saveAsTable("client_company_tbl")
-      println("Written to Hive table rough_db.client_company_tbl")
-
+      println("Written to Hive table rough_db.client_company_tbl in Parquet format")
+      // Store billing_address as Parquet
+      storeBillingAddressAsParquet(transformedDF, "/tmp/billing_address_parquet")
     } finally {
       spark.stop()
     }
+  }
+
+  def storeBillingAddressAsParquet(df: DataFrame, parquetPath: String): Unit = {
+    df.select("billing_address")
+      .write
+      .mode("overwrite")
+      .parquet(parquetPath)
+    println(s"billing_address written to Parquet at $parquetPath")
   }
 }
