@@ -3,6 +3,7 @@ package com.roughspark
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 
 object SparkSimpleApp {
   def main(args: Array[String]): Unit = {
@@ -29,16 +30,83 @@ object SparkSimpleApp {
           """
         [
           { "$match": { "company_id": "542ab2e523df4255a24e71a719f3da85" } },
-          { "$limit": 100 }
+          {"$sort": { "created": -1 } },
+          { "$skip": 20 },
+          { "$limit": 10 }
         ]
         """
         )
         .load()
-      val transformedDF = mongoDF.withColumn("created", current_timestamp())
-      transformedDF.show()
+
+        // Replace VOID fields with StringType (or drop them if not needed)
+        val billingAddressCleaned = struct(
+          col("billing_address._id").cast("string").alias("_id"),
+          col("billing_address.address_line_1").cast("string").alias("address_line_1"),
+          col("billing_address.address_line_2").cast("string").alias("address_line_2"),
+          col("billing_address.pincode").cast("string").alias("pincode"),
+          col("billing_address.city").cast("string").alias("city"),
+          col("billing_address.country").cast("string").alias("country"),
+          col("billing_address.state").cast("string").alias("state"),
+          col("billing_address.phone").cast("string").alias("phone")
+          // Exclude sync_data, is_default, email_addresses (VOID fields)
+        )
+      // Clean up sync_data array of structs using Scala API
+      val syncDataCleaned = transform(
+        col("sync_data"),
+        element => struct(
+          element.getField("synced_from").cast("string").alias("synced_from"),
+          element.getField("sync_source_id").cast("string").alias("sync_source_id"),
+          element.getField("synced_source_url").cast("string").alias("synced_source_url"),
+          when(
+            element.getField("last_synced_at").isNotNull,
+            (element.getField("last_synced_at").cast("long") / lit(1000000L)).cast("timestamp")
+          ).otherwise(null).alias("last_synced_at"),
+          element.getField("is_origin").cast("boolean").alias("is_origin"),
+          element.getField("sync_source_entity_type").cast("string").alias("sync_source_entity_type"),
+          element.getField("additional_sync_info").cast("string").alias("additional_sync_info"),
+          element.getField("is_deleted_from_sync_source").cast("boolean").alias("is_deleted_from_sync_source"),
+          element.getField("last_import_hash").cast("long").alias("last_import_hash"),
+          element.getField("sync_errors_info").cast("string").alias("sync_errors_info")
+        )
+      )
+
+      val transformedDF = mongoDF
+        .withColumn("_id", col("_id").cast("string"))
+        .withColumn("created", (col("created") / lit(1000000L)).cast("timestamp"))
+        .withColumn("updated", (col("updated") / lit(1000000L)).cast("timestamp"))
+        .withColumn("deleted", col("deleted").cast("boolean"))
+        .withColumn("name", col("name").cast("string"))
+        .withColumn("billing_address", billingAddressCleaned)
+        .withColumn("company_id", col("company_id").cast("string"))
+        .withColumn("owner_user_id", col("owner_user_id").cast("string"))
+        .withColumn("logo", col("logo").cast("string"))
+        .withColumn("sync_data", syncDataCleaned)
+        .withColumn("client_company_number", col("client_company_number").cast("string"))
+        .withColumn("company_types", col("company_types").cast("array<string>"))
+        .withColumn("market", col("market").cast("string"))
+        .withColumn("campaign", col("campaign").cast("string"))
+        .withColumn("client_company_identifier", col("client_company_identifier").cast("long"))
+        .withColumn("previously_updated_at", (col("previously_updated_at") / lit(1000000L)).cast("timestamp"))
+        .withColumn("fax", col("fax").cast("string"))
+        .withColumn("website", col("website").cast("string"))
+        .withColumn("linked_in_url", col("linked_in_url").cast("string"))
+        .withColumn("facebook_url", col("facebook_url").cast("string"))
+        .withColumn("twitter_url", col("twitter_url").cast("string"))
+        .withColumn("source", col("source").cast("string"))
+        .withColumn("date_acquired", col("date_acquired").cast("long"))
+        .withColumn("shipping_addresses", col("shipping_addresses").cast("array<string>"))
+        .withColumn("custom_fields", to_json(col("custom_fields")))
+        .withColumn("tax_region_id", col("tax_region_id").cast("string"))
+        .withColumn("read_only", col("read_only").cast("boolean"))
+        .withColumn("archived", col("archived").cast("boolean"))
+        .withColumn("blocked_for_import_at", col("blocked_for_import_at").cast("timestamp"))
+        .withColumn("created_by_user_id", col("created_by_user_id").cast("string"))
+        .withColumn("ms365_integration", col("ms365_integration").cast("string"))
+        .withColumn("cloud_assessment_counters", to_json(col("cloud_assessment_counters")))
+        .withColumn("is_dummy_data", col("is_dummy_data").cast("boolean"))
+
       spark.sql("CREATE DATABASE IF NOT EXISTS rough_db")
       spark.catalog.setCurrentDatabase("rough_db")
-      // Write to Hive as a managed table (overwrite for idempotency in dev)
       transformedDF
         .limit(200)
         .write
@@ -46,18 +114,8 @@ object SparkSimpleApp {
         .format("parquet")
         .saveAsTable("client_company_tbl")
       println("Written to Hive table rough_db.client_company_tbl in Parquet format")
-      // Store billing_address as Parquet
-      storeBillingAddressAsParquet(transformedDF, "/tmp/billing_address_parquet")
     } finally {
       spark.stop()
     }
-  }
-
-  def storeBillingAddressAsParquet(df: DataFrame, parquetPath: String): Unit = {
-    df.select("billing_address")
-      .write
-      .mode("overwrite")
-      .parquet(parquetPath)
-    println(s"billing_address written to Parquet at $parquetPath")
   }
 }
