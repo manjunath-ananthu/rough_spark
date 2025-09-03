@@ -24,15 +24,51 @@ object SparkSimpleApp {
     try {
       val mongoDF: DataFrame = spark.read
         .format("mongodb")
-        .option("batchSize", "10")
+        .option("batchSize", "200")
         .option(
           "aggregation.pipeline",
           """
         [
-          { "$match": { "company_id": "542ab2e523df4255a24e71a719f3da85" } },
-          {"$sort": { "created": -1 } },
+          { "$match": { "company_id": { "$ne": null }, "deleted": false } },
+          { "$sort": { "created": -1 } },
           { "$skip": 20 },
-          { "$limit": 10 }
+          { "$limit": 1000 },
+          { "$project": {
+              "_id": 1,
+              "created": 1,
+              "updated": 1,
+              "deleted": 1,
+              "name": 1,
+              "billing_address": 1,
+              "company_id": 1,
+              "owner_user_id": 1,
+              "logo": 1,
+              "sync_data": 1,
+              "client_company_number": 1,
+              "company_types": 1,
+              "market": 1,
+              "campaign": 1,
+              "client_company_identifier": 1,
+              "previously_updated_at": 1,
+              "fax": 1,
+              "website": 1,
+              "linked_in_url": 1,
+              "facebook_url": 1,
+              "twitter_url": 1,
+              "source": 1,
+              "date_acquired": 1,
+              "shipping_addresses": 1,
+              "custom_fields": 1,
+              "tax_region_id": 1,
+              "read_only": 1,
+              "archived": 1,
+              "blocked_for_import_at": 1,
+              "created_by_user_id": 1,
+              "ms365_integration": 1,
+              "cloud_assessment_counters": 1,
+              "is_dummy_data": 1,
+            }
+          }
         ]
         """
         )
@@ -112,7 +148,8 @@ object SparkSimpleApp {
         .write
         .mode("append")
         .format("parquet")
-        .saveAsTable("client_company_tbl")
+        .partitionBy("company_id")
+        .saveAsTable("client_company_company_id_table")
       println("Written to Hive table rough_db.client_company_tbl in Parquet format")
     } finally {
       spark.stop()
