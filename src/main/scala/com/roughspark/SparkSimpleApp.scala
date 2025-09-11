@@ -11,6 +11,7 @@ object SparkSimpleApp {
       .setAppName("Spark MongoDB to Hive")
       .setMaster("spark://spark-master:7077")
       .set("spark.mongodb.read.connection.uri", "mongodb://mongo_service:27017")
+      .set("spark.mongodb.read.connection.maxPoolSize", "5")
       .set("spark.mongodb.read.database", "cf_stage_v2")
       .set("spark.mongodb.read.collection", "client_company")
 
@@ -24,15 +25,17 @@ object SparkSimpleApp {
     try {
       val mongoDF: DataFrame = spark.read
         .format("mongodb")
-        .option("batchSize", "200")
+        .option("batchSize", "100")
+        .option("partitioner", "com.mongodb.spark.sql.connector.read.partitioner.SamplePartitioner")
+        .option("partitionerOptions.partitionSizeMB", "64")
         .option(
           "aggregation.pipeline",
           """
         [
-          { "$match": { "company_id": { "$ne": null }, "deleted": false } },
+          { "$match": { "company_id": "07cca5048c8c4316a94d95f85f145a47" , "deleted": false } },
           { "$sort": { "created": -1 } },
-          { "$skip": 20 },
-          { "$limit": 1000 },
+          { "$skip": 1700 },
+          { "$limit": 5000 },
           { "$project": {
               "_id": 1,
               "created": 1,
@@ -73,6 +76,7 @@ object SparkSimpleApp {
         """
         )
         .load()
+        .coalesce(10)
 
         // Replace VOID fields with StringType (or drop them if not needed)
         val billingAddressCleaned = struct(
@@ -139,12 +143,12 @@ object SparkSimpleApp {
         .withColumn("created_by_user_id", col("created_by_user_id").cast("string"))
         .withColumn("ms365_integration", col("ms365_integration").cast("string"))
         .withColumn("cloud_assessment_counters", to_json(col("cloud_assessment_counters")))
-        .withColumn("is_dummy_data", col("is_dummy_data").cast("boolean"))
+        .withColumn("is_dummy_data", lit(false).cast("boolean"))
 
       spark.sql("CREATE DATABASE IF NOT EXISTS rough_db")
       spark.catalog.setCurrentDatabase("rough_db")
       transformedDF
-        .limit(200)
+        .limit(10000)
         .write
         .mode("append")
         .format("parquet")
